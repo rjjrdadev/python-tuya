@@ -95,7 +95,8 @@ def mock_send_receive_status(data):
     return ret
 
 def mock_send_receive_set_colour(data):
-    expected = '{"dps":{"2":"colour", "5":"ffffff0000ffff"}, "devId":"DEVICE_ID_HERE","uid":"DEVICE_ID_HERE", "t":"1516117564"}'
+    expected = '{"dps":{"2":"colour", "5":"ffffff000000ff"}, "devId":"DEVICE_ID_HERE","uid":"DEVICE_ID_HERE", "t":"1516117564"}'
+
     json_data, frame_ok = check_data_frame(data, "000055aa0000000000000007000000")
 
     if frame_ok and compare_json_strings(json_data, expected, ['t']):
@@ -108,7 +109,7 @@ def mock_send_receive_set_colour(data):
     return ret
 
 def mock_send_receive_set_white(data):
-    expected = '{"dps":{"2":"white", "3":"255", "4":"255"}, "devId":"DEVICE_ID_HERE","uid":"DEVICE_ID_HERE", "t":"1516117564"}'
+    expected = '{"dps":{"2":"white", "3":255, "4":255}, "devId":"DEVICE_ID_HERE","uid":"DEVICE_ID_HERE", "t":"1516117564"}'
     json_data, frame_ok = check_data_frame(data, "000055aa0000000000000007000000")
 
     if frame_ok and compare_json_strings(json_data, expected, ['t']):
@@ -124,7 +125,7 @@ class TestXenonDevice(unittest.TestCase):
     def test_set_timer(self):
         d = pytuya.OutletDevice('DEVICE_ID_HERE', 'IP_ADDRESS_HERE', LOCAL_KEY)
         d._send_receive = MagicMock(side_effect=mock_send_receive_set_timer)
-        
+
         # Reset call_counter and start test
         mock_send_receive_set_timer.call_counter = 0
         result = d.set_timer(6666)
@@ -134,11 +135,11 @@ class TestXenonDevice(unittest.TestCase):
 
         # Make sure mock_send_receive_set_timer() has been called twice with correct parameters
         self.assertEqual(result['test_result'], "SUCCESS")
-        
+
     def test_set_status(self):
         d = pytuya.OutletDevice('DEVICE_ID_HERE', 'IP_ADDRESS_HERE', LOCAL_KEY)
         d._send_receive = MagicMock(side_effect=mock_send_receive_set_status)
-        
+
         result = d.set_status(True, 1)
         result = result.decode(mock_byte_encoding)  # Python 3 (3.5.4 and earlier) workaround to json stdlib "behavior" https://docs.python.org/3/whatsnew/3.6.html#json
         result = json.loads(result)
@@ -173,6 +174,26 @@ class TestXenonDevice(unittest.TestCase):
         result = result.decode(mock_byte_encoding)
         result = json.loads(result)
         
+        self.assertEqual(result['test_result'], "SUCCESS")
+
+    def test_set_colour(self):
+        d = pytuya.BulbDevice('DEVICE_ID_HERE', 'IP_ADDRESS_HERE', LOCAL_KEY)
+        d._send_receive = MagicMock(side_effect=mock_send_receive_set_colour)
+
+        result = d.set_colour(255,255,255)
+        result = result.decode(mock_byte_encoding)
+        result = json.loads(result)
+
+        self.assertEqual(result['test_result'], "SUCCESS")
+
+    def test_set_white(self):
+        d = pytuya.BulbDevice('DEVICE_ID_HERE', 'IP_ADDRESS_HERE', LOCAL_KEY)
+        d._send_receive = MagicMock(side_effect=mock_send_receive_set_white)
+
+        result = d.set_white(255, 255)
+        result = result.decode(mock_byte_encoding)
+        result = json.loads(result)
+
         self.assertEqual(result['test_result'], "SUCCESS")
 
 if __name__ == '__main__':
